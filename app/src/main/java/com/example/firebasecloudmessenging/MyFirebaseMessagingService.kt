@@ -1,14 +1,25 @@
 package com.example.firebasecloudmessenging
 
 import android.Manifest
+import android.annotation.SuppressLint
+import android.app.NotificationChannel
+import android.app.NotificationManager
+import android.app.PendingIntent
+import android.content.Context
+import android.content.Intent
 import android.content.pm.PackageManager
+import android.os.Build
 import android.util.Log
+import android.widget.RemoteViews
+import androidx.annotation.RequiresApi
 import androidx.core.app.ActivityCompat
 import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
 import com.google.firebase.messaging.FirebaseMessagingService
 import com.google.firebase.messaging.RemoteMessage
 
+const val channelId = "notification_channel"
+const val channelName = "com.example.firebasecloudmessenging"
 class MyFirebaseMessagingService : FirebaseMessagingService() {
 
     //Generar la notificacion
@@ -17,25 +28,49 @@ class MyFirebaseMessagingService : FirebaseMessagingService() {
 
     //show the notificacion
 
+    @RequiresApi(Build.VERSION_CODES.O)
+    fun OnMessageReceived(remoteMessage: RemoteMessage){
 
-    val  TAG ="MiToken"
-
-    override fun onMessageReceived(message: RemoteMessage) {
-        super.onMessageReceived(message)
-        Log.d(TAG, "Mensaje en primer: ${message.notification!!.title}")
+        if(remoteMessage.getNotification() != null){
+            generateNotificacion(remoteMessage.notification!!.title!!,remoteMessage.notification!!.body!!)
+        }
     }
 
-    /**
-     * Called if the FCM registration token is updated. This may occur if the security of
-     * the previous token had been compromised. Note that this is called when the
-     * FCM registration token is initially generated so this is where you would retrieve the token.
-     */
-    override fun onNewToken(token: String) {
-        Log.d(TAG, "Refreshed token: $token")
+    fun getRemoteView(title: String, message: String): RemoteViews{
+        val remoteView = RemoteViews("com.example.firebasecloudmessenging", R.layout.notificacion)
 
-        // If you want to send messages to this application instance or
-        // manage this apps subscriptions on the server side, send the
-        // FCM registration token to your app server.
-        //sendRegistrationToServer(token)
+        remoteView.setTextViewText(R.id.title,title)
+        remoteView.setTextViewText(R.id.message,message)
+        remoteView.setImageViewResource(R.id.app_logo, R.drawable.ic_campana_background)
+
+        return remoteView
     }
-}
+
+    @RequiresApi(Build.VERSION_CODES.O)
+    fun generateNotificacion(title: String, message: String) {
+        val intent = Intent(this, MainActivity::class.java)
+        intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP)
+
+        val pendingIntent = PendingIntent.getActivity(this, 0, intent, PendingIntent.FLAG_ONE_SHOT)
+
+        //channel id, channel name
+        var builder: NotificationCompat.Builder = NotificationCompat.Builder(applicationContext, channelId)
+            .setSmallIcon(R.drawable.ic_campana_background)
+            .setAutoCancel(true)
+            .setVibrate(longArrayOf(1000,1000,1000,1000))
+            .setOnlyAlertOnce(true)
+
+        builder = builder.setContent(getRemoteView(title, message))
+
+        val notificationManager = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+
+        if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.O){
+            val notificationChannel =
+                NotificationChannel(channelId, channelName, NotificationManager.IMPORTANCE_HIGH)
+            notificationManager.createNotificationChannel(notificationChannel)
+        }
+
+        notificationManager.notify(0, builder.build())
+
+        }
+    }

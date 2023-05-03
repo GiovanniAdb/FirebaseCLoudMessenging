@@ -34,7 +34,6 @@ android {
 }
 
 dependencies {
-    implementarion "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version"
     implementation 'com.google.firebase:firebase-messaging-ktx:23.0.0'
     implementation 'androidx.core:core-ktx:1.7.0'
     implementation 'androidx.appcompat:appcompat:1.6.1'

@@ -18,6 +18,8 @@
             android:layout_marginEnd="10dp"
             android:layout_marginBottom="10dp"
             android:contentDescription="TODO"
+            android:foreground="@android:drawable/ic_dialog_info"
+            android:foregroundTint="#E91E63"
             android:src="@drawable/ic_campana_background" />
 
         <TextView
